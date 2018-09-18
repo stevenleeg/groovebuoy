@@ -27,11 +27,11 @@ class Peer {
       return;
     }
 
-    const {name, ...params} = payload;
+    const {name, nonce, ...params} = payload;
     const method = this.rpcMethods[name];
     if (method) {
       console.log('Received command:', name);
-      method(params);
+      this.send({nonce, params: method(params)});
     } else {
       console.log('Received invalid call:', name);
     }
@@ -42,13 +42,11 @@ class Peer {
   //
   authenticate = ({username}) => {
     this.username = username;
+    return true;
   }
 
   fetchRooms = () => {
-    this.send({
-      name: 'setRooms',
-      params: this.server.rooms.map(r => r.serialize()),
-    });
+    return this.server.rooms.map(r => r.serialize());
   }
 
   ////
@@ -59,9 +57,9 @@ class Peer {
     username: this.username,
   })
 
-  send = ({name, params}) => {
+  send = ({name, params, nonce}) => {
     console.log('Sending to peer', this.id, name);
-    this.socket.send(JSON.stringify({name, params}))
+    this.socket.send(JSON.stringify({name, params, nonce}))
   }
 }
 
