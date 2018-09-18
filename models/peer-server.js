@@ -5,12 +5,13 @@ class PeerServer {
   constructor({websocket}) {
     this.websocket = websocket;
     this.peers = [];
+    this.rooms = [];
 
     this.websocket.on('connection', this._handleNewConnection);
   }
 
   _handleNewConnection = (socket) => {
-    const peer = new Peer({socket});
+    const peer = new Peer({socket, server: this});
     this.peers.push(peer);
 
     socket.on('close', () => {
