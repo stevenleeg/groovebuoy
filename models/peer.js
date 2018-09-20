@@ -1,10 +1,10 @@
-const EventEmitter = require('events');
 const uuid = require('uuid/v1');
 
 class Peer {
   constructor({socket, server}) {
     this.socket = socket;
     this.server = server;
+    this.room = null;
     this.id = uuid();
 
     socket.on('message', this._handleMessage);
@@ -12,6 +12,7 @@ class Peer {
     this.rpcMethods = {
       authenticate: this.authenticate,
       fetchRooms: this.fetchRooms,
+      createRoom: this.createRoom,
     };
   }
 
@@ -47,6 +48,10 @@ class Peer {
 
   fetchRooms = () => {
     return this.server.rooms.map(r => r.serialize());
+  }
+
+  createRoom = ({name}) => {
+    return this.server.createRoom({name}).serialize();
   }
 
   ////
