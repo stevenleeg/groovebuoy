@@ -2,22 +2,22 @@ const Peer = require('./peer');
 const Room = require('./room');
 
 class PeerServer {
-  constructor({websocket}) {
-    this.websocket = websocket;
+  constructor({socket}) {
+    this.socket = socket;
     this.peers = [];
     this.rooms = [];
 
-    this.websocket.on('connection', this._handleNewConnection);
+    this.socket.on('connection', this._handleNewConnection);
   }
 
   ////
   // Websocket server event helpers
   //
-  _handleNewConnection = (socket) => {
-    const peer = new Peer({socket, server: this});
+  _handleNewConnection = (peerSocket) => {
+    const peer = new Peer({socket: peerSocket, server: this});
     this.peers.push(peer);
 
-    socket.on('close', () => {
+    peerSocket.on('close', () => {
       if (peer.room !== null) {
         peer.room.removePeer(peer);
       }

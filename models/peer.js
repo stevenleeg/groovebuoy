@@ -7,11 +7,12 @@ class Peer {
     this.room = null;
     this.id = uuid();
 
-    socket.on('message', this._handleMessage);
+    this.socket.on('call', this._handleMessage);
 
     this.rpcMethods = {
       authenticate: this.authenticate,
       fetchRooms: this.fetchRooms,
+      fetchRoom: this.fetchRoom,
       createRoom: this.createRoom,
     };
   }
@@ -19,22 +20,16 @@ class Peer {
   ////
   // Socket events
   //
-  _handleMessage = (msg) => {
-    let payload;
-    try {
-      payload = JSON.parse(msg);
-    } catch (e) {
-      console.log('Received invalid message from connection: ', msg);
-      return;
-    }
-
-    const {name, nonce, ...params} = payload;
+  _handleMessage = ({name, nonce, params}, respond) => {
     const method = this.rpcMethods[name];
     if (method) {
-      console.log('Received command:', name);
-      this.send({nonce, params: method(params)});
+      console.log(`[RCV]: ${name}`);
+      const value = method(params);
+      console.log(`[SND]: ${value}`);
+      respond(value);
     } else {
-      console.log('Received invalid call:', name);
+      console.log(`[RCV] Invalid call: ${name}`);
+      respond({error: true});
     }
   }
 
@@ -50,6 +45,12 @@ class Peer {
     return this.server.rooms.map(r => r.serialize());
   }
 
+  fetchRoom = ({id}) => {
+    const room = this.server.rooms.find(r => r.id === id);
+    if (!room) return null
+    return room.serialize();
+  }
+
   createRoom = ({name}) => {
     return this.server.createRoom({name}).serialize();
   }
@@ -63,8 +64,8 @@ class Peer {
   })
 
   send = ({name, params, nonce}) => {
-    console.log('Sending to peer', this.id, name);
-    this.socket.send(JSON.stringify({name, params, nonce}))
+    console.log(`[SND]: ${name} (${nonce})`);
+    this.socket.emit('call', {name, params, nonce});
   }
 }
 
