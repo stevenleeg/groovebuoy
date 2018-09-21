@@ -17,8 +17,8 @@ class PeerServer {
     const peer = new Peer({socket: peerSocket, server: this});
     this.peers.push(peer);
 
-    peerSocket.on('close', () => {
-      if (peer.room !== null) {
+    peerSocket.on('disconnect', () => {
+      if (peer.room) {
         peer.room.removePeer(peer);
       }
 

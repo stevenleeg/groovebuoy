@@ -4,7 +4,7 @@ class Peer {
   constructor({socket, server}) {
     this.socket = socket;
     this.server = server;
-    this.room = null;
+    this.currentRoom = null;
     this.id = uuid();
 
     this.socket.on('call', this._handleMessage);
@@ -12,24 +12,24 @@ class Peer {
     this.rpcMethods = {
       authenticate: this.authenticate,
       fetchRooms: this.fetchRooms,
-      fetchRoom: this.fetchRoom,
       createRoom: this.createRoom,
+      joinRoom: this.joinRoom,
     };
   }
 
   ////
   // Socket events
   //
-  _handleMessage = ({name, nonce, params}, respond) => {
+  _handleMessage = ({name, params}, respond) => {
     const method = this.rpcMethods[name];
     if (method) {
       console.log(`[RCV]: ${name}`);
       const value = method(params);
-      console.log(`[SND]: ${value}`);
+      console.log(`[RSP]: ${JSON.stringify(value)}`);
       respond(value);
     } else {
       console.log(`[RCV] Invalid call: ${name}`);
-      respond({error: true});
+      respond({error: true, message: 'Invalid method name'});
     }
   }
 
@@ -45,10 +45,17 @@ class Peer {
     return this.server.rooms.map(r => r.serialize());
   }
 
-  fetchRoom = ({id}) => {
+  joinRoom = ({id}) => {
     const room = this.server.rooms.find(r => r.id === id);
-    if (!room) return null
-    return room.serialize();
+    if (!room) return {error: true, message: 'Room not found'};
+
+    this.currentRoom = room;
+    this.currentRoom.addPeer({peer: this});
+
+    return {
+      ...room.serialize(),
+      peers: room.peers.map(p => p.serialize()),
+    };
   }
 
   createRoom = ({name}) => {
@@ -63,9 +70,9 @@ class Peer {
     username: this.username,
   })
 
-  send = ({name, params, nonce}) => {
-    console.log(`[SND]: ${name} (${nonce})`);
-    this.socket.emit('call', {name, params, nonce});
+  send = ({name, params}) => {
+    console.log(`[SND]: ${name}`);
+    this.socket.emit('call', {name, params});
   }
 }
 

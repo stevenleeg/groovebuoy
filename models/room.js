@@ -16,6 +16,8 @@ class Room {
       this.owner = peer;
     }
 
+    this.broadcast({name: 'peerJoined', peer: peer.serialize()});
+
     this.peers.push(peer);
     clearTimeout(this._removalTimeout);
   }
@@ -35,6 +37,12 @@ class Room {
     if (peer === this.owner) {
       this.owner = this.peers[0];
     }
+
+    this.broadcast({name: 'peerLeft', id: peer.id});
+  }
+
+  broadcast = ({name, params}) => {
+    this.peers.forEach(p => p.send({name, params}));
   }
 
   serialize = () => ({
