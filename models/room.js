@@ -6,6 +6,7 @@ class Room {
     this.name = name;
     this.server = server;
     this.peers = [];
+    this.djs = [];
     this.owner = null;
 
     this._removalTimeout = null;
@@ -24,6 +25,12 @@ class Room {
 
   removePeer = ({peer}) => {
     const index = this.peers.indexOf(peer);
+    if (index === -1) {
+      console.log('[ERR] Could not find peer to remove from room');
+      return;
+    }
+
+    console.log('Removing peer from room');
     this.peers.splice(index, 1);
 
     // If we don't have any peers left let's clean ourselves up after 45s
@@ -45,10 +52,13 @@ class Room {
     this.peers.forEach(p => p.send({name, params}));
   }
 
-  serialize = () => ({
+  serialize = ({includePeers = false} = {}) => ({
     id: this.id,
     name: this.name,
-    peerCount: this.peers.length,
+    ...(includePeers ? {
+      peers: this.peers.map(p => p.serialize()),
+      djs: this.djs.map(p => p.id),
+    } : {}),
   })
 }
 

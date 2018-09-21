@@ -18,8 +18,8 @@ class PeerServer {
     this.peers.push(peer);
 
     peerSocket.on('disconnect', () => {
-      if (peer.room) {
-        peer.room.removePeer(peer);
+      if (peer.currentRoom) {
+        peer.currentRoom.removePeer({peer});
       }
 
       const i = this.peers.indexOf(peer);

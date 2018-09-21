@@ -53,7 +53,7 @@ class Peer {
     this.currentRoom.addPeer({peer: this});
 
     return {
-      ...room.serialize(),
+      ...room.serialize({includePeers: true}),
       peers: room.peers.map(p => p.serialize()),
     };
   }
