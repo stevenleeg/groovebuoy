@@ -1,5 +1,7 @@
 const uuid = require('uuid/v1');
 
+const MAX_DJS = 5;
+
 class Room {
   constructor({name, server}) {
     this.id = uuid();
@@ -17,10 +19,14 @@ class Room {
       this.owner = peer;
     }
 
-    this.broadcast({name: 'peerJoined', peer: peer.serialize()});
-
     this.peers.push(peer);
     clearTimeout(this._removalTimeout);
+
+    this.broadcast({
+      excludeIds: [peer.id],
+      name: 'setPeers', 
+      params: {peers: this.peers.map(p => p.serialize())},
+    });
   }
 
   removePeer = ({peer}) => {
@@ -32,6 +38,9 @@ class Room {
 
     console.log('Removing peer from room');
     this.peers.splice(index, 1);
+
+    // Remove from them from the DJ list if they're there
+    this.removeDj({peer});
 
     // If we don't have any peers left let's clean ourselves up after 45s
     if (this.peers.length === 0) {
@@ -45,11 +54,38 @@ class Room {
       this.owner = this.peers[0];
     }
 
-    this.broadcast({name: 'peerLeft', id: peer.id});
+    this.broadcast({
+      name: 'setPeers', 
+      params: {peers: this.peers.map(p => p.serialize())},
+    });
   }
 
-  broadcast = ({name, params}) => {
-    this.peers.forEach(p => p.send({name, params}));
+  // Promotes the given peer to DJ
+  addDj = ({peer}) => {
+    if (this.djs.length === MAX_DJS) return false;
+    this.djs.push(peer);
+    this.broadcast({name: 'setDjs', params: {
+      djs: this.djs.map(p => p.id),
+    }});
+
+    return true;
+  }
+
+  removeDj = ({peer}) => {
+    const index = this.djs.indexOf(peer);
+    if (index === -1) return false;
+
+    this.djs.splice(index, 1);
+    this.broadcast({name: 'setDjs', params: {
+      djs: this.djs.map(p => p.id),
+    }});
+  }
+
+  broadcast = ({name, params, excludeIds = []}) => {
+    this.peers.forEach((peer) => {
+      if (excludeIds.includes(peer.id)) return;
+      peer.send({name, params})
+    });
   }
 
   serialize = ({includePeers = false} = {}) => ({

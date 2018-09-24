@@ -14,6 +14,7 @@ class Peer {
       fetchRooms: this.fetchRooms,
       createRoom: this.createRoom,
       joinRoom: this.joinRoom,
+      becomeDj: this.becomeDj,
     };
   }
 
@@ -60,6 +61,18 @@ class Peer {
 
   createRoom = ({name}) => {
     return this.server.createRoom({name}).serialize();
+  }
+
+  becomeDj = () => {
+    if (!this.currentRoom) {
+      return {error: true, message: 'Must be in a room to promote'};
+    }
+
+    if (this.currentRoom.addDj({peer: this})) {
+      return {success: true};
+    } else {
+      return {error: true, message: 'Could not promote'};
+    }
   }
 
   ////
