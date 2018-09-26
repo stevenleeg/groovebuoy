@@ -15,6 +15,7 @@ class Peer {
       createRoom: this.createRoom,
       joinRoom: this.joinRoom,
       becomeDj: this.becomeDj,
+      trackEnded: this.trackEnded,
     };
   }
 
@@ -70,6 +71,22 @@ class Peer {
     if (!this.currentRoom.addDj({peer: this})) {
       return {error: true, message: 'Could not promote'};
     }
+
+    return {success: true};
+  }
+
+  trackEnded = () => {
+    if (!this.currentRoom) {
+      return {error: true, message: 'Must be in a room to end a track'};
+    }
+
+    if (this.currentRoom.activeDj !== this) {
+      // TODO: some kind of metric to determine if everyone is ending at the
+      // same time
+      return {success: true};
+    }
+
+    this.currentRoom.spinDj();
 
     return {success: true};
   }

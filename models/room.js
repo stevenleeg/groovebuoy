@@ -81,7 +81,10 @@ class Room {
     const index = this.djs.indexOf(peer);
     if (index === -1) return false;
 
-    if (peer === this.activeDj) this.activeDj = null;
+    if (peer === this.activeDj) {
+      this.activeDj = null;
+      this.broadcast({name: 'stopTrack'});
+    }
 
     this.djs.splice(index, 1);
     this.broadcast({name: 'setDjs', params: {
@@ -93,12 +96,16 @@ class Room {
   spinDj = () => {
     if (this.activeDj === null) {
       this.activeDj = this.djs[0];
+    } else {
+      const currentIndex = this.djs.indexOf(this.activeDj);
+      const nextIndex = (currentIndex + 1) % this.djs.length;
+      this.activeDj = this.djs[nextIndex];
     }
     this.broadcast({name: 'setActiveDj', params: {djId: this.activeDj.id}});
 
     this.activeDj.send({
       name: 'requestTrack', 
-      callback: ({track}) => this.broadcast({name: 'spinTrack', params: {track}}),
+      callback: ({track}) => this.broadcast({name: 'playTrack', params: {track}}),
     });
   }
 
