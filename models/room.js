@@ -9,6 +9,7 @@ class Room {
     this.server = server;
     this.peers = [];
     this.djs = [];
+    this.activeDj = null;
     this.owner = null;
 
     this._removalTimeout = null;
@@ -68,6 +69,11 @@ class Room {
       djs: this.djs.map(p => p.id),
     }});
 
+    // They're the first DJ so let's spin up a track
+    if (this.djs.length === 1) {
+      this.spinDj();
+    }
+
     return true;
   }
 
@@ -75,12 +81,30 @@ class Room {
     const index = this.djs.indexOf(peer);
     if (index === -1) return false;
 
+    if (peer === this.activeDj) this.activeDj = null;
+
     this.djs.splice(index, 1);
     this.broadcast({name: 'setDjs', params: {
       djs: this.djs.map(p => p.id),
     }});
   }
 
+  // Picks the next DJ, requests a track, and plays it
+  spinDj = () => {
+    if (this.activeDj === null) {
+      this.activeDj = this.djs[0];
+    }
+    this.broadcast({name: 'setActiveDj', params: {djId: this.activeDj.id}});
+
+    this.activeDj.send({
+      name: 'requestTrack', 
+      callback: ({track}) => this.broadcast({name: 'spinTrack', params: {track}}),
+    });
+  }
+
+  ////
+  // Helper functions
+  //
   broadcast = ({name, params, excludeIds = []}) => {
     this.peers.forEach((peer) => {
       if (excludeIds.includes(peer.id)) return;

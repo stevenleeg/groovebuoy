@@ -24,9 +24,8 @@ class Peer {
   _handleMessage = ({name, params}, respond) => {
     const method = this.rpcMethods[name];
     if (method) {
-      console.log(`[RCV]: ${name}`);
+      console.log(`[RCV ${this.id.split('-')[0]}]: ${name}`);
       const value = method(params);
-      console.log(`[RSP]: ${JSON.stringify(value)}`);
       respond(value);
     } else {
       console.log(`[RCV] Invalid call: ${name}`);
@@ -68,11 +67,11 @@ class Peer {
       return {error: true, message: 'Must be in a room to promote'};
     }
 
-    if (this.currentRoom.addDj({peer: this})) {
-      return {success: true};
-    } else {
+    if (!this.currentRoom.addDj({peer: this})) {
       return {error: true, message: 'Could not promote'};
     }
+
+    return {success: true};
   }
 
   ////
@@ -83,9 +82,9 @@ class Peer {
     username: this.username,
   })
 
-  send = ({name, params}) => {
-    console.log(`[SND]: ${name}`);
-    this.socket.emit('call', {name, params});
+  send = ({name, params = {}, callback}) => {
+    console.log(`[SND ${this.id.split('-')[0]}]: ${name}`);
+    this.socket.emit('call', {name, params}, callback);
   }
 }
 
