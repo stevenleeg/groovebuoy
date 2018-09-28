@@ -6,6 +6,7 @@ class Peer {
     this.server = server;
     this.currentRoom = null;
     this.id = uuid();
+    this.profile = null;
 
     this.socket.on('call', this._handleMessage);
 
@@ -16,6 +17,7 @@ class Peer {
       joinRoom: this.joinRoom,
       becomeDj: this.becomeDj,
       trackEnded: this.trackEnded,
+      setProfile: this.setProfile,
     };
   }
 
@@ -91,12 +93,26 @@ class Peer {
     return {success: true};
   }
 
+  setProfile = ({profile}) => {
+    this.profile = profile;
+
+    if (this.currentRoom) {
+      this.currentRoom.broadcast({
+        name: 'setPeerProfile',
+        params: {id: this.id, profile},
+        excludeIds: [this.id],
+      });
+    }
+
+    return {success: true};
+  }
+
   ////
   // Helpers
   //
   serialize = () => ({
     id: this.id,
-    username: this.username,
+    profile: this.profile,
   })
 
   send = ({name, params = {}, callback}) => {
