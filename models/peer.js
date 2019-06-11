@@ -48,7 +48,7 @@ class Peer {
 
   _handleDisconnect = () => {
     if (this.currentRoom) {
-      this.currentRoom.removePeer({peer});
+      this.currentRoom.removePeer({peer: this});
     }
 
     this.server.removePeer({peer: this});
@@ -103,7 +103,7 @@ class Peer {
 
   joinRoom = ({id}) => {
     const room = this.server.rooms.find(r => r.id === id);
-    if (!room) return {error: true, message: 'Room not found'};
+    if (!room) return {error: true, message: 'room not found'};
 
     this.currentRoom = room;
     this.currentRoom.addPeer({peer: this});
@@ -119,11 +119,11 @@ class Peer {
 
   becomeDj = () => {
     if (!this.currentRoom) {
-      return {error: true, message: 'Must be in a room to promote'};
+      return {error: true, message: 'must be in a room to promote'};
     }
 
     if (!this.currentRoom.addDj({peer: this})) {
-      return {error: true, message: 'Could not promote'};
+      return {error: true, message: 'could not promote'};
     }
 
     return {success: true};
@@ -131,7 +131,7 @@ class Peer {
 
   trackEnded = () => {
     if (!this.currentRoom) {
-      return {error: true, message: 'Must be in a room to end a track'};
+      return {error: true, message: 'must be in a room to end a track'};
     }
 
     if (this.currentRoom.activeDj !== this) {
