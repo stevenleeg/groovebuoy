@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const Peer = require('./peer');
 const Room = require('./room');
 
@@ -8,7 +9,25 @@ class PeerServer {
     this.rooms = [];
 
     this.socket.on('connection', this._handleNewConnection);
+
+    // Create a first invite
+    const invite = this.generateInvite();
+    console.log(`Seed invite:\n${invite}\n`);
   }
+
+  generateInvite = () => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const payload = {
+      // Generated at
+      g: timestamp,
+      // URL
+      u: process.env.BUOY_URL,
+      // Server name
+      n: process.env.BUOY_NAME,
+    };
+
+    return jwt.sign(payload, process.env.JWT_SECRET);
+  };
 
   ////
   // Websocket server event helpers
@@ -16,16 +35,6 @@ class PeerServer {
   _handleNewConnection = (peerSocket) => {
     const peer = new Peer({socket: peerSocket, server: this});
     this.peers.push(peer);
-
-    peerSocket.on('disconnect', () => {
-      if (peer.currentRoom) {
-        peer.currentRoom.removePeer({peer});
-      }
-
-      const i = this.peers.indexOf(peer);
-      this.peers.splice(i, 1);
-      console.log('Connection closed');
-    });
 
     console.log(`New connection established: ${peer.id}`);
   }
@@ -45,6 +54,11 @@ class PeerServer {
   removeRoom = ({room}) => {
     const index = this.rooms.indexOf(room);
     this.rooms.splice(index, 1);
+  }
+
+  removePeer = ({peer}) => {
+    const i = this.peers.indexOf(peer);
+    this.peers.splice(i, 1);
   }
 }
 

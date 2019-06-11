@@ -1,17 +1,26 @@
 const uuid = require('uuid/v1');
+const JWT = require('jsonwebtoken');
+
+// Peers have 5000 seconds to authenticate before getting das boot
+const AUTH_TIMEOUT = 5000;
 
 class Peer {
   constructor({socket, server}) {
     this.socket = socket;
     this.server = server;
     this.currentRoom = null;
-    this.id = uuid();
     this.profile = null;
+    this.id = null;
+
+    // They have 5 seconds to authenticate
+    this.authTimeout = setTimeout(this._closeUnauthenticated, 5000);
 
     this.socket.on('call', this._handleMessage);
+    this.socket.on('disconnect', this._handleDisconnect);
 
     this.rpcMethods = {
       authenticate: this.authenticate,
+      join: this.join,
       fetchRooms: this.fetchRooms,
       createRoom: this.createRoom,
       joinRoom: this.joinRoom,
@@ -27,7 +36,8 @@ class Peer {
   _handleMessage = ({name, params}, respond) => {
     const method = this.rpcMethods[name];
     if (method) {
-      console.log(`[RCV ${this.id.split('-')[0]}]: ${name}`);
+      const id = this.id ? this.id.split('-')[0] : 'unauth';
+      console.log(`[RCV ${id}]: ${name}`);
       const value = method(params);
       respond(value);
     } else {
@@ -36,12 +46,55 @@ class Peer {
     }
   }
 
+  _handleDisconnect = () => {
+    if (this.currentRoom) {
+      this.currentRoom.removePeer({peer});
+    }
+
+    this.server.removePeer({peer: this});
+    console.log('Connection closed');
+  };
+
+  _closeUnauthenticated = () => {
+    console.log('Closing unauthenticated peer');
+    this.socket.disconnect();
+  }
+
   ////
   // RPC Commands
   //
-  authenticate = ({username}) => {
-    this.username = username;
-    return true;
+  join = ({jwt}) => {
+    const invite = JWT.verify(jwt, process.env.JWT_SECRET);
+    if (invite.u !== process.env.BUOY_URL || invite.n !== process.env.BUOY_NAME) {
+      return {error: true, message: 'invalid token'};
+    }
+
+    this.id = uuid();
+
+    // Generate an auth token
+    const token = JWT.sign({
+      // URL
+      u: process.env.BUOY_URL,
+      // Server name
+      n: process.env.BUOY_NAME,
+      // ID
+      i: this.id,
+    }, process.env.JWT_SECRET);
+
+    clearTimeout(this.authTimeout);
+    return {token};
+  }
+
+  authenticate = ({jwt}) => {
+    const token = JWT.verify(jwt, process.env.JWT_SECRET);
+    if (token.u !== process.env.BUOY_URL || token.n !== process.env.BUOY_NAME) {
+      return {error: true, message: 'invalid token'};
+    }
+
+    this.id = token.i;
+
+    clearTimeout(this.authTimeout);
+    return {success: true, id: this.id};
   }
 
   fetchRooms = () => {
@@ -57,7 +110,6 @@ class Peer {
 
     return {
       ...room.serialize({includePeers: true}),
-      peers: room.peers.map(p => p.serialize()),
     };
   }
 
@@ -104,7 +156,7 @@ class Peer {
       });
     }
 
-    return {success: true};
+    return {success: true, peerId: this.id};
   }
 
   ////
