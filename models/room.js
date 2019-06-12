@@ -63,7 +63,7 @@ class Room {
 
   // Promotes the given peer to DJ
   addDj = ({peer}) => {
-    if (this.djs.length === MAX_DJS) return false;
+    if (this.djs.length >= MAX_DJS) return false;
     this.djs.push(peer);
     this.broadcast({name: 'setDjs', params: {
       djs: this.djs.map(p => p.id),
@@ -74,7 +74,7 @@ class Room {
       this.spinDj();
     }
 
-    return true;
+    return {success: true};
   }
 
   removeDj = ({peer}) => {
@@ -125,6 +125,7 @@ class Room {
     ...(includePeers ? {
       peers: this.peers.map(p => p.serialize()),
       djs: this.djs.map(p => p.id),
+      activeDj: this.activeDj ? this.activeDj.id : null,
     } : {}),
   })
 }
