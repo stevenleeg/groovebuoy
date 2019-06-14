@@ -64,7 +64,13 @@ class Peer {
   // RPC Commands
   //
   join = ({jwt}) => {
-    const invite = JWT.verify(jwt, process.env.JWT_SECRET);
+    let invite;
+    try {
+      invite = JWT.verify(jwt, process.env.JWT_SECRET);
+    } catch (e) {
+      return {error: true, message: 'invalid token'};
+    }
+
     if (invite.u !== process.env.BUOY_URL || invite.n !== process.env.BUOY_NAME) {
       return {error: true, message: 'invalid token'};
     }
@@ -114,6 +120,10 @@ class Peer {
   }
 
   createRoom = ({name}) => {
+    if (name.length === 0) {
+      return {error: true, message: 'name must be at least 1 character'};
+    }
+
     return this.server.createRoom({name}).serialize();
   }
 
@@ -135,12 +145,10 @@ class Peer {
     }
 
     if (this.currentRoom.activeDj !== this) {
-      // TODO: some kind of metric to determine if everyone is ending at the
-      // same time
-      return {success: true};
+      return {error: true, message: 'must be the active dj to end the track'};
     }
 
-    this.currentRoom.spinDj();
+    this.currentRoom.endTrack();
 
     return {success: true};
   }

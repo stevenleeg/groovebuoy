@@ -11,6 +11,7 @@ class Room {
     this.djs = [];
     this.activeDj = null;
     this.owner = null;
+    this.nowPlaying = null;
 
     this._removalTimeout = null;
   }
@@ -28,6 +29,14 @@ class Room {
       name: 'setPeers', 
       params: {peers: this.peers.map(p => p.serialize())},
     });
+
+    // If we're in the middle of playing a song, send them the current track
+    if (this.nowPlaying) {
+      peer.send({
+        name: 'playTrack',
+        params: this.nowPlaying,
+      });
+    }
   }
 
   removePeer = ({peer}) => {
@@ -63,7 +72,13 @@ class Room {
 
   // Promotes the given peer to DJ
   addDj = ({peer}) => {
-    if (this.djs.length >= MAX_DJS) return false;
+    if (this.djs.length >= MAX_DJS) {
+      return {error: true, message: 'too many djs, not enough mics'};
+    }
+    if (this.djs.findIndex(dj => dj.id === peer.id) !== -1) {
+      return {error: true, message: 'already a dj'};
+    }
+
     this.djs.push(peer);
     this.broadcast({name: 'setDjs', params: {
       djs: this.djs.map(p => p.id),
@@ -83,7 +98,7 @@ class Room {
 
     if (peer === this.activeDj) {
       this.activeDj = null;
-      this.broadcast({name: 'stopTrack'});
+      this.endTrack();
     }
 
     this.djs.splice(index, 1);
@@ -92,21 +107,45 @@ class Room {
     }});
   }
 
-  // Picks the next DJ, requests a track, and plays it
   spinDj = () => {
-    if (this.activeDj === null) {
+    // Select the next DJ
+    if (this.djs.length === 0) {
+      this.activeDj = null;
+      return;
+    } else if (this.activeDj === null) {
       this.activeDj = this.djs[0];
     } else {
       const currentIndex = this.djs.indexOf(this.activeDj);
       const nextIndex = (currentIndex + 1) % this.djs.length;
       this.activeDj = this.djs[nextIndex];
     }
+
+    // Announce the selection to the room
     this.broadcast({name: 'setActiveDj', params: {djId: this.activeDj.id}});
 
+    // Request a track
     this.activeDj.send({
       name: 'requestTrack', 
-      callback: ({track}) => this.broadcast({name: 'playTrack', params: {track}}),
+      callback: ({track}) => {
+        this.nowPlaying = {
+          track,
+          startedAt: (+ new Date()),
+        };
+
+        // Blast it off to everybody else
+        this.broadcast({
+          name: 'playTrack',
+          params: this.nowPlaying,
+        });
+      },
     });
+  }
+
+  endTrack = () => {
+    this.nowPlaying = null;
+    this.broadcast({name: 'stopTrack'});
+    this.broadcast({name: 'setActiveDj', params: {djId: null}});
+    this.spinDj();
   }
 
   ////
