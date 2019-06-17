@@ -40,8 +40,9 @@ class Peer {
     if (method) {
       const id = this.id ? this.id.split('-')[0] : 'unauth';
       console.log(`[RCV ${id}]: ${name}`);
-      const value = method(params);
-      respond(value);
+      Promise.resolve(method(params))
+        .then(v => respond(v))
+        .catch(e => respond({error: true, message: e.toString}));
     } else {
       console.log(`[RCV] Invalid call: ${name}`);
       respond({error: true, message: 'Invalid method name'});
@@ -65,7 +66,7 @@ class Peer {
   ////
   // RPC Commands
   //
-  join = ({jwt}) => {
+  join = async ({jwt}) => {
     let invite;
     try {
       invite = JWT.verify(jwt, process.env.JWT_SECRET);
@@ -90,10 +91,12 @@ class Peer {
     }, process.env.JWT_SECRET);
 
     clearTimeout(this.authTimeout);
-    return {token, peerId: this.id};
+
+    const ipfsGateway = await this.server.ipfsSwarmAddress();
+    return {token, peerId: this.id, ipfsGateway};
   }
 
-  authenticate = ({jwt}) => {
+  authenticate = async ({jwt}) => {
     const token = JWT.verify(jwt, process.env.JWT_SECRET);
     if (token.u !== process.env.BUOY_URL || token.n !== process.env.BUOY_NAME) {
       return {error: true, message: 'invalid token'};
@@ -102,7 +105,9 @@ class Peer {
     this.id = token.i;
 
     clearTimeout(this.authTimeout);
-    return {success: true, peerId: this.id};
+
+    const ipfsGateway = await this.server.ipfsSwarmAddress();
+    return {success: true, peerId: this.id, ipfsGateway};
   }
 
   fetchRooms = () => {

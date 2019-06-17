@@ -60,6 +60,14 @@ class PeerServer {
     const i = this.peers.indexOf(peer);
     this.peers.splice(i, 1);
   }
+
+  ////
+  // Helpers
+  //
+  ipfsSwarmAddress = async () => {
+    const id = await global.ipfsd.api.id();
+    return id.addresses[1];
+  }
 }
 
 module.exports = PeerServer;
