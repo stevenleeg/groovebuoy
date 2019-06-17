@@ -28,6 +28,7 @@ class Peer {
       stepDown: this.stepDown,
       trackEnded: this.trackEnded,
       setProfile: this.setProfile,
+      sendChat: this.sendChat,
     };
   }
 
@@ -179,6 +180,16 @@ class Peer {
     }
 
     return {success: true, peerId: this.id};
+  }
+
+  sendChat = ({message}) => {
+    if (message.length === 0) {
+      return {error: true, message: 'can\'t send a blank message'};
+    }
+
+    this.currentRoom.sendChat({message, from: this});
+
+    return {success: true};
   }
 
   ////

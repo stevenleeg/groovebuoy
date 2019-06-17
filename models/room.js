@@ -160,6 +160,18 @@ class Room {
     this.spinDj();
   }
 
+  sendChat = ({message, from}) => {
+    this.broadcast({
+      name: 'newChatMsg',
+      params: {
+        id: uuid(),
+        message,
+        fromPeerId: from.id,
+        timestamp: (+ new Date()),
+      },
+    });
+  }
+
   ////
   // Helper functions
   //
