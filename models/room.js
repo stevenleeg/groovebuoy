@@ -94,34 +94,46 @@ class Room {
 
   removeDj = ({peer}) => {
     const index = this.djs.indexOf(peer);
-    if (index === -1) return false;
-
-    if (peer === this.activeDj) {
-      this.activeDj = null;
-      this.endTrack();
+    if (index === -1) {
+      return false;
     }
 
     this.djs.splice(index, 1);
     this.broadcast({name: 'setDjs', params: {
       djs: this.djs.map(p => p.id),
     }});
+
+    if (peer.id === this.activeDj.id) {
+      this.setActiveDj({peer: null});
+      this.endTrack();
+    }
+
+    return true;
+  }
+
+  setActiveDj = ({peer}) => {
+    if (!peer) {
+      this.broadcast({name: 'setActiveDj', params: {djId: null}});
+      this.activeDj = null;
+      return;
+    }
+
+    this.activeDj = peer;
+    this.broadcast({name: 'setActiveDj', params: {djId: peer.id}});
   }
 
   spinDj = () => {
     // Select the next DJ
     if (this.djs.length === 0) {
-      this.activeDj = null;
+      this.setActiveDj({peer: null});
       return;
     } else if (this.activeDj === null) {
-      this.activeDj = this.djs[0];
+      this.setActiveDj({peer: this.djs[0]});
     } else {
       const currentIndex = this.djs.indexOf(this.activeDj);
       const nextIndex = (currentIndex + 1) % this.djs.length;
-      this.activeDj = this.djs[nextIndex];
+      this.setActiveDj({peer: this.djs[nextIndex]});
     }
-
-    // Announce the selection to the room
-    this.broadcast({name: 'setActiveDj', params: {djId: this.activeDj.id}});
 
     // Request a track
     this.activeDj.send({

@@ -36,7 +36,7 @@ class PeerServer {
     const peer = new Peer({socket: peerSocket, server: this});
     this.peers.push(peer);
 
-    console.log(`New connection established: ${peer.id}`);
+    console.log(`New connection established`);
   }
 
   ////

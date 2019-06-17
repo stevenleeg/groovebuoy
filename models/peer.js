@@ -25,6 +25,7 @@ class Peer {
       createRoom: this.createRoom,
       joinRoom: this.joinRoom,
       becomeDj: this.becomeDj,
+      stepDown: this.stepDown,
       trackEnded: this.trackEnded,
       setProfile: this.setProfile,
     };
@@ -88,7 +89,7 @@ class Peer {
     }, process.env.JWT_SECRET);
 
     clearTimeout(this.authTimeout);
-    return {token};
+    return {token, peerId: this.id};
   }
 
   authenticate = ({jwt}) => {
@@ -100,7 +101,7 @@ class Peer {
     this.id = token.i;
 
     clearTimeout(this.authTimeout);
-    return {success: true, id: this.id};
+    return {success: true, peerId: this.id};
   }
 
   fetchRooms = () => {
@@ -134,6 +135,19 @@ class Peer {
 
     if (!this.currentRoom.addDj({peer: this})) {
       return {error: true, message: 'could not promote'};
+    }
+
+    return {success: true};
+  }
+
+  stepDown = () => {
+    if (!this.currentRoom) {
+      return {error: true, message: 'must be in a room to step down'};
+    }
+
+    const success = this.currentRoom.removeDj({peer: this});
+    if (!success) {
+      return {error: true, message: 'must be a dj to step down'};
     }
 
     return {success: true};
