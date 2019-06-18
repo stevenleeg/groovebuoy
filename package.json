@@ -8,9 +8,6 @@
   "dependencies": {
     "dotenv": "^8.0.0",
     "express": "^4.16.3",
-    "fs-extra": "^8.0.1",
-    "go-ipfs-dep": "^0.4.21",
-    "ipfsd-ctl": "^0.42.4",
     "jsonwebtoken": "^8.5.1",
     "socket.io": "^2.1.1",
     "uuid": "^3.3.2",
