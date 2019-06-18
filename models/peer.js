@@ -42,7 +42,7 @@ class Peer {
       console.log(`[RCV ${id}]: ${name}`);
       Promise.resolve(method(params))
         .then(v => respond(v))
-        .catch(e => respond({error: true, message: e.toString}));
+        .catch(e => respond({error: true, message: e.toString()}));
     } else {
       console.log(`[RCV] Invalid call: ${name}`);
       respond({error: true, message: 'Invalid method name'});
@@ -92,8 +92,7 @@ class Peer {
 
     clearTimeout(this.authTimeout);
 
-    const ipfsGateway = await this.server.ipfsSwarmAddress();
-    return {token, peerId: this.id, ipfsGateway};
+    return {token, peerId: this.id};
   }
 
   authenticate = async ({jwt}) => {
@@ -106,8 +105,7 @@ class Peer {
 
     clearTimeout(this.authTimeout);
 
-    const ipfsGateway = await this.server.ipfsSwarmAddress();
-    return {success: true, peerId: this.id, ipfsGateway};
+    return {success: true, peerId: this.id};
   }
 
   fetchRooms = () => {

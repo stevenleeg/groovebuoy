@@ -139,6 +139,12 @@ class Room {
     this.activeDj.send({
       name: 'requestTrack', 
       callback: ({track}) => {
+        track.id = uuid();
+        track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
+        this.server.tracks[track.id] = {...track};
+
+        // We don't need to send out the full data URL to clients
+        delete track.data;
         this.nowPlaying = {
           track,
           startedAt: (+ new Date()),
