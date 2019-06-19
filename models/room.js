@@ -160,6 +160,8 @@ class Room {
   }
 
   endTrack = () => {
+    delete this.server.tracks[this.nowPlaying.track.id];
+
     this.nowPlaying = null;
     this.broadcast({name: 'stopTrack'});
     this.broadcast({name: 'setActiveDj', params: {djId: null}});
