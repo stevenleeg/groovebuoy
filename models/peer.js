@@ -179,7 +179,6 @@ class Peer {
       this.currentRoom.broadcast({
         name: 'setPeerProfile',
         params: {id: this.id, profile},
-        excludeIds: [this.id],
       });
     }
 
