@@ -29,6 +29,7 @@ class Peer {
       trackEnded: this.trackEnded,
       setProfile: this.setProfile,
       sendChat: this.sendChat,
+      vote: this.vote,
     };
   }
 
@@ -193,6 +194,10 @@ class Peer {
     this.currentRoom.sendChat({message, from: this});
 
     return {success: true};
+  }
+
+  vote = ({direction}) => {
+    return this.currentRoom.setVote({peerId: this.id, direction});
   }
 
   ////

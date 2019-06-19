@@ -147,6 +147,7 @@ class Room {
         delete track.data;
         this.nowPlaying = {
           track,
+          votes: {},
           startedAt: (+ new Date()),
         };
 
@@ -178,6 +179,21 @@ class Room {
         timestamp: (+ new Date()),
       },
     });
+  }
+
+  setVote = ({peerId, direction}) => {
+    if (!this.nowPlaying) {
+      return {error: true, message: 'there is no track playing'};
+    }
+
+    this.nowPlaying.votes[peerId] = !!direction;
+
+    this.broadcast({
+      name: 'setVotes',
+      params: {votes: this.nowPlaying.votes},
+    });
+
+    return {success: true};
   }
 
   ////
