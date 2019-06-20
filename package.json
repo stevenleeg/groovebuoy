@@ -6,6 +6,7 @@
   "author": "Steve Gattuso <steve@stevegattuso.me>",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^8.0.0",
     "express": "^4.16.3",
     "jsonwebtoken": "^8.5.1",

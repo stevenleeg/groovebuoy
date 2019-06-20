@@ -148,7 +148,7 @@ class Room {
         this.nowPlaying = {
           track,
           votes: {},
-          startedAt: (+ new Date()),
+          startedAt: (+ new Date()) / 1000,
         };
 
         // Blast it off to everybody else
