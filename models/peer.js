@@ -205,9 +205,7 @@ class Peer {
       return {error: true, message: 'must be active dj to skip turn'};
     }
 
-    this.currentRoom.setActiveDj({peer: null});
     this.currentRoom.endTrack();
-    this.currentRoom.spinDj();
     return {success: true};
   }
 
