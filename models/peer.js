@@ -20,15 +20,16 @@ class Peer {
 
     this.rpcMethods = {
       authenticate: this.authenticate,
-      join: this.join,
-      fetchRooms: this.fetchRooms,
-      createRoom: this.createRoom,
-      joinRoom: this.joinRoom,
       becomeDj: this.becomeDj,
+      createRoom: this.createRoom,
+      fetchRooms: this.fetchRooms,
+      join: this.join,
+      joinRoom: this.joinRoom,
+      sendChat: this.sendChat,
+      setProfile: this.setProfile,
+      skipTurn: this.skipTurn,
       stepDown: this.stepDown,
       trackEnded: this.trackEnded,
-      setProfile: this.setProfile,
-      sendChat: this.sendChat,
       vote: this.vote,
     };
   }
@@ -197,6 +198,17 @@ class Peer {
 
   vote = ({direction}) => {
     return this.currentRoom.setVote({peerId: this.id, direction});
+  }
+
+  skipTurn = () => {
+    if (!this.currentRoom || !this.currentRoom.activeDj || this.currentRoom.activeDj.id !== this.id) {
+      return {error: true, message: 'must be active dj to skip turn'};
+    }
+
+    this.currentRoom.setActiveDj({peer: null});
+    this.currentRoom.endTrack();
+    this.currentRoom.spinDj();
+    return {success: true};
   }
 
   ////
