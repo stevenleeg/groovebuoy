@@ -21,9 +21,11 @@ app.get('/tracks/:id', (req, res) => {
     return;
   }
 
-  res
-    .set('Content-Type', track.contentType)
-    .send(track.data);
+  res.writeHead(200, {
+    'Content-Type': track.contentType,
+    'Content-Length': track.data.length,
+  });
+  res.end(track.data, 'binary');
 });
 
 server.listen(8000, () => {
