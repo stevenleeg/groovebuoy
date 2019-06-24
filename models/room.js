@@ -103,7 +103,7 @@ class Room {
       djs: this.djs.map(p => p.id),
     }});
 
-    if (peer.id === this.activeDj.id) {
+    if (this.activeDj && peer.id === this.activeDj.id) {
       this.setActiveDj({peer: null});
       this.endTrack();
     }
