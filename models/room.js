@@ -12,6 +12,7 @@ class Room {
     this.activeDj = null;
     this.owner = null;
     this.nowPlaying = null;
+    this.skipWarning = false;
 
     this._removalTimeout = null;
   }
@@ -198,6 +199,35 @@ class Room {
       params: {votes: this.nowPlaying.votes},
     });
 
+    // Do we need to skip the track?
+    const {ups, downs} = Object.keys(this.nowPlaying.votes).reduce(({ups, downs}, peerId) => {
+      if (this.nowPlaying.votes[peerId]) {
+        return {downs, ups: ups + 1};
+      } else {
+        return {ups, downs: downs + 1};
+      }
+    }, {ups: 0, downs: 0});
+
+    const quorumPerc = (ups + downs) / this.peers.length;
+    const downPerc = downs / (ups + downs);
+    const shouldSkip = quorumPerc >= .3 && downPerc >= .5;
+    if (!this.skipWarning && shouldSkip) {
+      // If we have >= 30% quorum and >= 50% of the room is voting against we
+      // should skip
+      this.broadcast({name: 'setSkipWarning', params: {value: true}});
+      this.skipWarning = true;
+      this.skipTimeout = setTimeout(() => {
+        this.skipWarning = false;
+        this.broadcast({name: 'setSkipWarning', params: {value: false}});
+        this.endTrack();
+      }, 5000);
+    } else if (this.skipWarning && !shouldSkip) {
+      // We no longer have support to skip, so let's cancel the warning
+      clearTimeout(this.skipTimeout);
+      this.skipWarning = false;
+      this.broadcast({name: 'setSkipWarning', params: {value: false}});
+    }
+
     return {success: true};
   }
 
@@ -214,6 +244,7 @@ class Room {
   serialize = ({includePeers = false} = {}) => ({
     id: this.id,
     name: this.name,
+    skipWarning: this.skipWarning,
     ...(includePeers ? {
       peers: this.peers.map(p => p.serialize()),
       djs: this.djs.map(p => p.id),
