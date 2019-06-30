@@ -46,7 +46,21 @@ class PeerServer {
   createRoom = ({name}) => {
     const room = new Room({name, server: this});
     this.rooms.push(room);
+    this.broadcastRooms();
+
     return room;
+  }
+
+  // Broadcast to all peers without a room
+  broadcastRooms = () => {
+    const rooms = this.rooms.map(r => r.serialize());
+    this.peers.forEach((peer) => {
+      if (peer.currentRoom) {
+        return;
+      }
+
+      peer.send({name: 'setRooms', params: {rooms}});
+    });
   }
 
   ////
@@ -55,6 +69,7 @@ class PeerServer {
   removeRoom = ({room}) => {
     const index = this.rooms.indexOf(room);
     this.rooms.splice(index, 1);
+    this.broadcastRooms();
   }
 
   removePeer = ({peer}) => {
