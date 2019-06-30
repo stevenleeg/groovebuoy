@@ -25,6 +25,7 @@ class Peer {
       fetchRooms: this.fetchRooms,
       join: this.join,
       joinRoom: this.joinRoom,
+      leaveRoom: this.leaveRoom,
       sendChat: this.sendChat,
       setProfile: this.setProfile,
       skipTurn: this.skipTurn,
@@ -124,6 +125,15 @@ class Peer {
     return {
       ...room.serialize({includePeers: true}),
     };
+  }
+
+  leaveRoom = () => {
+    if (!this.currentRoom) {
+      return {error: true, message: 'you are not in a room'};
+    }
+
+    this.currentRoom.removePeer({peer: this});
+    return true;
   }
 
   createRoom = ({name}) => {

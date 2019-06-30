@@ -47,7 +47,7 @@ class Room {
       return;
     }
 
-    console.log('Removing peer from room');
+    console.log(`Removing peer ${peer.id} from room ${this.id}`);
     this.peers.splice(index, 1);
 
     // Remove from them from the DJ list if they're there
