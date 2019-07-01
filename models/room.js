@@ -149,7 +149,7 @@ class Room {
         this.nowPlaying = {
           track,
           votes: {},
-          startedAt: ((+ new Date()) / 1000) + 4,
+          startedAt: ((+ new Date()) / 1000) + 10, // 10s for loading between tracks
         };
 
         // Blast it off to everybody else
