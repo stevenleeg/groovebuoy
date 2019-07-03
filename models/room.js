@@ -108,7 +108,6 @@ class Room {
     let refreshOnDeck = false;
     if (this.nextDj() === peer) {
       refreshOnDeck = true;
-      this.onDeckDj = null;
     }
 
     this.djs.splice(index, 1);
@@ -123,6 +122,8 @@ class Room {
 
     if (this.djs.length !== 0 && refreshOnDeck) {
       this.fetchOnDeck();
+    } else if (this.djs.length === 0) {
+      this.broadcast({name: 'setOnDeck', params: {track: null}});
     }
 
     return true;
@@ -205,7 +206,6 @@ class Room {
 
     // Fetch the next track and put it on deck
     const nextDj = this.nextDj();
-    this.onDeckDj = nextDj;
     const {track} = await nextDj.send({name: 'requestTrack'});
 
     track.id = uuid();
