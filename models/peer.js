@@ -31,6 +31,7 @@ class Peer {
       skipTurn: this.skipTurn,
       stepDown: this.stepDown,
       trackEnded: this.trackEnded,
+      updatedQueue: this.updatedQueue,
       vote: this.vote,
     };
   }
@@ -217,6 +218,14 @@ class Peer {
 
     this.currentRoom.endTrack();
     return {success: true};
+  }
+
+  updatedQueue = () => {
+    if (!this.currentRoom || this.currentRoom.nextDj() !== this) {
+      return;
+    }
+
+    this.currentRoom.fetchOnDeck();
   }
 
   ////
