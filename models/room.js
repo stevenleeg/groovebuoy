@@ -12,6 +12,7 @@ class Room {
     this.activeDj = null;
     this.owner = null;
     this.nowPlaying = null;
+    this.onDeck = null;
     this.skipWarning = false;
 
     this._removalTimeout = null;
@@ -123,41 +124,74 @@ class Room {
     this.broadcast({name: 'setActiveDj', params: {djId: peer.id}});
   }
 
-  spinDj = () => {
-    // Select the next DJ
+  nextDj = () => {
     if (this.djs.length === 0) {
-      this.setActiveDj({peer: null});
-      return;
+      return null;
     } else if (this.activeDj === null) {
-      this.setActiveDj({peer: this.djs[0]});
+      return this.djs[0];
     } else {
       const currentIndex = this.djs.indexOf(this.activeDj);
       const nextIndex = (currentIndex + 1) % this.djs.length;
-      this.setActiveDj({peer: this.djs[nextIndex]});
+      return this.djs[nextIndex];
+    }
+  }
+
+  spinDj = async () => {
+    // Select the next DJ
+    const dj = this.nextDj();
+    this.setActiveDj({peer: dj});
+
+    // No dj no music
+    if (!dj) {
+      return;
     }
 
-    // Request a track
-    this.activeDj.send({
-      name: 'requestTrack', 
-      callback: ({track}) => {
-        track.id = uuid();
-        track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
-        this.server.tracks[track.id] = {...track};
+    let track;
+    if (this.onDeck) {
+      // If we know the track already let's go ahead and fire it up
+      track = this.onDeck;
+      this.onDeck = null;
+    } else {
+      // Otherwise let's request a track from the dj
+      const resp = await dj.send({name: 'requestTrack'});
+      track = resp.track;
+      track.id = uuid();
+      track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
+      this.server.tracks[track.id] = {...track};
+    }
 
-        // We don't need to send out the full data URL to clients
-        delete track.data;
-        this.nowPlaying = {
-          track,
-          votes: {},
-          startedAt: ((+ new Date()) / 1000) + 10, // 10s for loading between tracks
-        };
+    // We don't need to send out the full data URL to clients
+    delete track.data;
+    this.nowPlaying = {
+      track,
+      votes: {},
+      // TODO: Make the 5s delay a dynamic time based on loading confirmations
+      startedAt: ((+ new Date()) / 1000) + 5, // 5s for loading between tracks
+    };
 
-        // Blast it off to everybody else
-        this.broadcast({
-          name: 'playTrack',
-          params: this.nowPlaying,
-        });
-      },
+    // Blast it off to everybody else
+    this.broadcast({
+      name: 'playTrack',
+      params: this.nowPlaying,
+    });
+
+    // We've successfully played the track from this DJ so let's tell them to
+    // cycle to the next song in their queue
+    dj.send({name: 'cycleSelectedQueue'});
+
+    // Fetch the next track and put it on deck
+    const nextDj = this.nextDj();
+    const {track: nextTrack} = await nextDj.send({name: 'requestTrack'});
+
+    nextTrack.id = uuid();
+    nextTrack.url = `${process.env.BUOY_HTTP_URL}/tracks/${nextTrack.id}`;
+    this.server.tracks[nextTrack.id] = {...nextTrack};
+
+    delete nextTrack.data;
+    this.onDeck = nextTrack;
+    this.broadcast({
+      name: 'setOnDeck',
+      params: {track: nextTrack},
     });
   }
 

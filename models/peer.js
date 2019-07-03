@@ -227,9 +227,11 @@ class Peer {
     profile: this.profile,
   })
 
-  send = ({name, params = {}, callback}) => {
-    console.log(`[SND ${this.id.split('-')[0]}]: ${name}`);
-    this.socket.emit('call', {name, params}, callback);
+  send = ({name, params = {}}) => {
+    return new Promise((resolve) => {
+      console.log(`[SND ${this.id.split('-')[0]}]: ${name}`);
+      this.socket.emit('call', {name, params}, (...args) => resolve(...args));
+    });
   }
 }
 
