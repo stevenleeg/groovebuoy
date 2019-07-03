@@ -39,6 +39,13 @@ class Room {
         params: this.nowPlaying,
       });
     }
+
+    if (this.onDeck) {
+      peer.send({
+        name: 'setOnDeck',
+        params: {track: this.onDeck},
+      });
+    }
   }
 
   removePeer = ({peer}) => {
