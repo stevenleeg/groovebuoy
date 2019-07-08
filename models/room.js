@@ -118,19 +118,16 @@ class Room {
     }
 
     this.djs.splice(index, 1);
-    this.broadcast({name: 'setDjs', params: {
-      djs: this.djs.map(p => p.id),
-    }});
+    this.broadcast({name: 'setDjs', params: {djs: this.djs.map(p => p.id)}});
 
     if (this.activeDj && this.activeDj === peer) {
-      this.setActiveDj({peer: null});
-      this.endTrack();
+      return this.endTrack();
     }
 
     if (this.djs.length !== 0 && refreshOnDeck) {
       this.fetchOnDeck();
     } else if (this.djs.length === 0) {
-      this.broadcast({name: 'setOnDeck', params: {track: null}});
+      this.setOnDeck({track: null});
     }
 
     return true;
@@ -166,6 +163,7 @@ class Room {
 
     // No dj no music
     if (!dj) {
+      this.setOnDeck({track: null});
       return;
     }
 
@@ -215,17 +213,17 @@ class Room {
     const nextDj = this.nextDj();
     const {track} = await nextDj.send({name: 'requestTrack'});
 
+    // Abort if the next DJ has changed in the time it took to request the track
+    if (this.nextDj() !== nextDj) {
+      return;
+    }
+
     track.id = uuid();
     track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
     this.server.tracks[track.id] = {...track};
 
     delete track.data;
-    this.onDeck = track;
-    this.broadcast({
-      name: 'setOnDeck',
-      params: {track},
-    });
-    console.log(`on deck set to track ${track.id}`);
+    this.setOnDeck({track});
   }
 
   endTrack = () => {
@@ -296,6 +294,11 @@ class Room {
     }
 
     return {success: true};
+  }
+
+  setOnDeck = ({track}) => {
+    this.broadcast({name: 'setOnDeck', params: {track}});
+    this.onDeck = track;
   }
 
   ////
