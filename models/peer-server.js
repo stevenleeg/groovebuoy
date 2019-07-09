@@ -10,7 +10,7 @@ class PeerServer {
     this.tracks = {};
 
     this.url = `${process.env.SSL_ENABLED ? 'http://' : 'https://'}${process.env.BUOY_HOST}/`;
-    this.ws_url = `${process.env.SSL_ENABLED ? 'ws://' : 'wss://'}${process.env.BUOY_HOST}/`;
+    this.wsUrl = `${process.env.SSL_ENABLED ? 'ws://' : 'wss://'}${process.env.BUOY_HOST}/`;
     this.name = process.env.BUOY_NAME;
 
     this.socket.on('connection', this._handleNewConnection);
@@ -26,7 +26,7 @@ class PeerServer {
       // Generated at
       g: timestamp,
       // URL
-      u: this.ws_url,
+      u: this.wsUrl,
       // Server name
       n: this.name,
     };
