@@ -28,7 +28,7 @@ class Room {
 
     this.broadcast({
       excludeIds: [peer.id],
-      name: 'setPeers', 
+      name: 'setPeers',
       params: {peers: this.peers.map(p => p.serialize())},
     });
     this.server.broadcastRooms();
@@ -75,7 +75,7 @@ class Room {
     }
 
     this.broadcast({
-      name: 'setPeers', 
+      name: 'setPeers',
       params: {peers: this.peers.map(p => p.serialize())},
     });
     this.server.broadcastRooms();
@@ -179,7 +179,7 @@ class Room {
       const resp = await dj.send({name: 'requestTrack'});
       track = resp.track;
       track.id = uuid();
-      track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
+      track.url = `${this.server.url}tracks/${track.id}`;
       this.server.tracks[track.id] = {...track};
     }
 
@@ -222,7 +222,7 @@ class Room {
     }
 
     track.id = uuid();
-    track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
+    track.url = `${this.server.url}tracks/${track.id}`;
     this.server.tracks[track.id] = {...track};
 
     delete track.data;
