@@ -9,8 +9,8 @@ class PeerServer {
     this.rooms = [];
     this.tracks = {};
 
-    this.url = `${process.env.SSL_ENABLED ? 'http://' : 'https://'}${process.env.BUOY_HOST}/`;
-    this.wsUrl = `${process.env.SSL_ENABLED ? 'ws://' : 'wss://'}${process.env.BUOY_HOST}/`;
+    this.url = `${process.env.SSL_ENABLED === '1' ? 'https://' : 'http://'}${process.env.BUOY_HOST}/`;
+    this.wsUrl = `${process.env.SSL_ENABLED === '1' ? 'wss://' : 'ws://'}${process.env.BUOY_HOST}/`;
     this.name = process.env.BUOY_NAME;
 
     this.socket.on('connection', this._handleNewConnection);

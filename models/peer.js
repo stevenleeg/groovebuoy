@@ -78,7 +78,7 @@ class Peer {
       return {error: true, message: 'invalid token'};
     }
 
-    if (invite.u !== this.server.ws_url || invite.n !== this.server.name) {
+    if (invite.u !== this.server.wsUrl || invite.n !== this.server.name) {
       return {error: true, message: 'invalid token'};
     }
 
@@ -101,7 +101,7 @@ class Peer {
 
   authenticate = async ({jwt}) => {
     const token = JWT.verify(jwt, process.env.JWT_SECRET);
-    if (token.u !== this.server.ws_url || token.n !== this.server.name) {
+    if (token.u !== this.server.wsUrl || token.n !== this.server.name) {
       return {error: true, message: 'invalid token'};
     }
 
