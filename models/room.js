@@ -31,6 +31,7 @@ class Room {
       name: 'setPeers', 
       params: {peers: this.peers.map(p => p.serialize())},
     });
+    this.server.broadcastRooms();
 
     // If we're in the middle of playing a song, send them the current track
     if (this.nowPlaying) {
@@ -77,6 +78,7 @@ class Room {
       name: 'setPeers', 
       params: {peers: this.peers.map(p => p.serialize())},
     });
+    this.server.broadcastRooms();
   }
 
   // Promotes the given peer to DJ
@@ -189,6 +191,7 @@ class Room {
       // TODO: Make the 5s delay a dynamic time based on loading confirmations
       startedAt: ((+ new Date()) / 1000) + 5, // 5s for loading between tracks
     };
+    this.server.broadcastRooms();
 
     // Blast it off to everybody else
     this.broadcast({
@@ -236,6 +239,7 @@ class Room {
     this.nowPlaying = null;
     this.broadcast({name: 'stopTrack'});
     this.broadcast({name: 'setActiveDj', params: {djId: null}});
+    this.server.broadcastRooms();
     this.spinDj();
     return true;
   }
@@ -319,7 +323,10 @@ class Room {
       peers: this.peers.map(p => p.serialize()),
       djs: this.djs.map(p => p.id),
       activeDj: this.activeDj ? this.activeDj.id : null,
-    } : {}),
+    } : {
+      peerCount: this.peers.length,
+      nowPlaying: this.nowPlaying,
+    }),
   })
 }
 
