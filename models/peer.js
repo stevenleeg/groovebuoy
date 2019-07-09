@@ -78,7 +78,7 @@ class Peer {
       return {error: true, message: 'invalid token'};
     }
 
-    if (invite.u !== process.env.BUOY_URL || invite.n !== process.env.BUOY_NAME) {
+    if (invite.u !== this.server.ws_url || invite.n !== this.server.name) {
       return {error: true, message: 'invalid token'};
     }
 
@@ -87,9 +87,9 @@ class Peer {
     // Generate an auth token
     const token = JWT.sign({
       // URL
-      u: process.env.BUOY_URL,
+      u: this.server.ws_url,
       // Server name
-      n: process.env.BUOY_NAME,
+      n: this.server.name,
       // ID
       i: this.id,
     }, process.env.JWT_SECRET);
@@ -101,7 +101,7 @@ class Peer {
 
   authenticate = async ({jwt}) => {
     const token = JWT.verify(jwt, process.env.JWT_SECRET);
-    if (token.u !== process.env.BUOY_URL || token.n !== process.env.BUOY_NAME) {
+    if (token.u !== this.server.ws_url || token.n !== this.server.name) {
       return {error: true, message: 'invalid token'};
     }
 

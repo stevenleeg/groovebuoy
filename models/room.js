@@ -171,7 +171,7 @@ class Room {
       const resp = await dj.send({name: 'requestTrack'});
       track = resp.track;
       track.id = uuid();
-      track.url = `${process.env.BUOY_URL}/tracks/${track.id}`;
+      track.url = `${this.server.url}tracks/${track.id}`;
       this.server.tracks[track.id] = {...track};
     }
 
@@ -209,7 +209,7 @@ class Room {
     const {track} = await nextDj.send({name: 'requestTrack'});
 
     track.id = uuid();
-    track.url = `${process.env.BUOY_HTTP_URL}/tracks/${track.id}`;
+    track.url = `${this.server.url}tracks/${track.id}`;
     this.server.tracks[track.id] = {...track};
 
     delete track.data;

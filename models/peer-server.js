@@ -9,6 +9,10 @@ class PeerServer {
     this.rooms = [];
     this.tracks = {};
 
+    this.url = `${process.env.SSL_ENABLED ? 'http://' : 'https://'}${process.env.BUOY_HOST}/`;
+    this.ws_url = `${process.env.SSL_ENABLED ? 'ws://' : 'wss://'}${process.env.BUOY_HOST}/`;
+    this.name = process.env.BUOY_NAME;
+
     this.socket.on('connection', this._handleNewConnection);
 
     // Create a first invite
@@ -22,9 +26,9 @@ class PeerServer {
       // Generated at
       g: timestamp,
       // URL
-      u: process.env.BUOY_URL,
+      u: this.ws_url,
       // Server name
-      n: process.env.BUOY_NAME,
+      n: this.name,
     };
 
     return jwt.sign(payload, process.env.JWT_SECRET);
