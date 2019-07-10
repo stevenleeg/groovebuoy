@@ -49,6 +49,37 @@ If you're interested in creating a bot (or alternative client) for Grooveboat,
 this reference should provide you with all of the information necessary to do
 so. In addition, you may wish to browse through [Groovebot](https://github.com/stevenleeg/groovebot) to see an example of what this could look like in practice with a Node.js bot.
 
+**Table of Contents:**
+* [Connecting](#connecting)
+* [Authentication](#authentication)
+* Server RPC Methods
+    * [authenticate](#authenticate)
+    * [becomeDj](#becomedj)
+    * [createRoom](#createroom)
+    * [fetchRooms](#fetchrooms)
+    * [join](#join)
+    * [joinRoom](#joinroom)
+    * [leaveRoom](#leaveroom)
+    * [sendChat](#sendchat)
+    * [setProfile](#setprofile)
+    * [skipTurn](#skipturn)
+    * [stepDown](#stepdown)
+    * [trackEnded](#trackended)
+    * [updatedQueue](#updatedqueue)
+    * [vote](#vote)
+* Client RPC Methods
+    * [cycleSelectedQueue](#cycleselectedqueue)
+    * [newChatMsg](#newchatmsg)
+    * [requestTrack](#requesttrack)
+    * [setActiveDj](#setactivedj)
+    * [setDjs](#setdjs)
+    * [setOnDeck](#setondeck)
+    * [setPeers](#setpeers)
+    * [setRooms](#setrooms)
+    * [setSkipWarning](#setskipwarning)
+    * [setVotes](#setvotes)
+    * [stopTrack](#stoptrack)
+
 ## Connecting
 Buoys expose an RPC API using [socket.io](https://socket.io/) as the
 communication medium. Socket.io has libraries in a variety of different
