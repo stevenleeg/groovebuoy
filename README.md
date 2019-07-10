@@ -213,15 +213,133 @@ None
 
 **Response:**
 
-An array of serialized rooms with the following schema:
+An array of [serialized rooms](#room).
 
+### `join`
+Join the buoy, exchanging an invite code for an authentication token that can be used to authenticate a given peer in future connections.
+
+**Params:**
+* `jwt`: The invite code
+
+**Response**:
+* `token`: The auth token that can be used in future connections (presented to the `authenticate` method).
+* `peerId`: The ID of the new peer. This identifier will be reused between connections if the client uses the `token` to authenticate.
+
+### `joinRoom`
+Joins a room on the buoy, also subscribing the client to any events that take place within that room.
+
+**Params:**
+
+`id`: The ID of the room to join
+
+**Response:**
+
+A serialized [room object](#room).
+
+### `leaveRoom`
+Leaves the peer's current room. This method will also unsubscribe the peer from any events that take place within the room.
+
+**Params:**
+
+None
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+### `sendChat`
+Sends a chat message to the peer's current room.
+
+**Params:**
+
+* `message`: The text message to be sent to the room.
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+### `setProfile`
+Sets the profile of the peer. A profile is an object that can contain whatever values, though the default Grooveboat client currently recognizes the following schema:
+
+```javascript
+{
+  "handle": "coolkid42", // The display name of the peer
+  "emoji": "🐧"          // An emoji associated with the peer (their "avatar")
+}
+```
+
+**Params:**
+
+* `profile`: A profile object, as defined in the description above.
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+### `skipTurn`
+Skips the peer's turn if they are the active DJ of a room, otherwise fails.
+
+**Params:**
+
+None
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+### `stepDown`
+Steps down from being a DJ in the room, ie returning to the audience. Fails if the peer is not currently a DJ.
+
+**Params:**
+
+None
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+### `trackEnded`
+Alerts the buoy that the current track is over, allowing the next DJ to begin their turn. Fails if the peer is not the currently active DJ in the room.
+
+Note that, yes, you can technically be a jerk and not call this method if it is your turn and cause the room to freeze. Generally people will vote you down and cause the song to skip if this happens, so it's best to be a good citizen and call this method as soon as your track has ended.
+
+### `updatedQueue`
+Notifies the buoy that your currently active queue has been updated. This allows the buoy to intelligently preload tracks from DJs in the room, responding to upcoming DJs changing their queues as necessary. *This method should only be called if the peer updates their active queue while being a DJ*.
+
+Note that this has no params, as the server will call `requestTrack` on the client if it decides it wishes to preload a track off of the peer's freshly updated queue.
+
+**Params:**
+
+None
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+### `vote`
+Sets the peer's vote for the currently playing track. Will fail if the user is not currently in a room or there is no track playing.
+
+Note that there is currently no way to revoke a vote, you can only change to the other direction by calling this method again on the same track.
+
+**Params:**
+
+* `direction`: A boolean deciding the direction of the vote. `true` means up, `false` means down.
+
+**Response:**
+
+* `success`: A boolean representing that the operation was successful.
+
+## Object schemas
+
+### Room
 * `id`: ID of the room
 * `name`: Name of the room
 * `peerCount`: The number of peers in the room
 * `nowPlaying`: The currently playing track or `null`
 
-If the `nowPlaying` key is not null, it will be an object of the following schema:
+If the `nowPlaying` key is not null, it will be a [Track](#track) object
 
+### Track
 * `id`: ID of the track
 * `filename`: The name of the track's source file
 * `artist`: The name of the track artists (if present in the file's ID3 data)
@@ -229,6 +347,3 @@ If the `nowPlaying` key is not null, it will be an object of the following schem
 * `title`: The name of the track (if present in the file's ID3 data)
 
 When presenting this information to an end user, you should generally fall back to using the `filename` key if the `artist`, `album`, or `title` keys are `null`.
-
-### `join`
-Coming soon....

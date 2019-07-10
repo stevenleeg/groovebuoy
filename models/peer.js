@@ -134,7 +134,7 @@ class Peer {
     }
 
     this.currentRoom.removePeer({peer: this});
-    return true;
+    return {success: true};
   }
 
   createRoom = ({name}) => {
@@ -208,6 +208,12 @@ class Peer {
   }
 
   vote = ({direction}) => {
+    if (!this.currentRoom) {
+      return {error: true, message: 'you must be in a room in order to vote'};
+    } else if (!this.currentRoom.nowPlaying) {
+      return {error: true, message: 'there is no song playing to vote on'};
+    }
+
     return this.currentRoom.setVote({peerId: this.id, direction});
   }
 
@@ -226,6 +232,8 @@ class Peer {
     }
 
     this.currentRoom.fetchOnDeck();
+
+    return {success: true};
   }
 
   ////
