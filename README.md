@@ -173,9 +173,11 @@ Authenticate to the server using an auth token. The auth token is a JWT with the
 ```
 
 **Params:**
+
 * `jwt`: The auth token used to authenticate
 
-*Response:*
+**Response:**
+
 * `peerId`: The ID of the peer that was authenticated. This should match the `i` field of the auth token.
 
 #### `becomeDj`
@@ -184,27 +186,33 @@ Attempt to become a DJ in the room. This method will fail if there are 5 or more
 Note that, if successful, the server will immediately call `setDjs` on the client to update the DJ list. The client *should not* update its internal DJ list after receiving a successful response from this RPC call.
 
 **Params:**
+
 None
 
 **Response:**
+
 * `success`: A boolean representing whether or not the operation was a success.
 
 #### `createRoom`
 Creates a new room on the buoy.
 
 **Params:**
+
 * `name`: The name of the room
 
 **Response:**
+
 * `id`: The ID of the room
 
 #### `fetchRooms`
 Fetches the current list of rooms on the buoy
 
 **Params:**
+
 None
 
 **Response:**
+
 An array of serialized rooms with the following schema:
 
 * `id`: ID of the room
