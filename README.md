@@ -1,12 +1,12 @@
 # 🌊🛥️ Groovebuoy
 _Minimal server side so that boats can groove_
 
-## What's this?
+# What's this?
 
 If you don't know, you better check out what's
 [Grooveboat](https://github.com/stevenleeg/grooveboat).
 
-## Getting started
+# Getting started
 
 To run this, you'll need a recent version of
 [node](https://nodejs.org/)
@@ -44,12 +44,12 @@ in the console, you can share it with your friends so they can join this buoy.
 The main piece of information contained in the seed invite is the URL to this
 server, so you should make sure that this URL is reachable by the peers.
 
-## API Reference
+# API Reference
 If you're interested in creating a bot (or alternative client) for Grooveboat,
 this reference should provide you with all of the information necessary to do
 so. In addition, you may wish to browse through [Groovebot](https://github.com/stevenleeg/groovebot) to see an example of what this could look like in practice with a Node.js bot.
 
-### Connecting
+## Connecting
 Buoys expose an RPC API using [socket.io](https://socket.io/) as the
 communication medium. Socket.io has libraries in a variety of different
 languages (see [python](https://github.com/miguelgrinberg/python-socketio), 
@@ -100,7 +100,7 @@ The remainder of this guide will assume you have access to the `callRPC` functio
 
 **TODO:** At some point in the future we'll write a nice node wrapper to build bots with, but for now this guide will have to do.
 
-### Authentication
+## Authentication
 Once you've connected to a buoy, your client has ~5 seconds to authenticate. The authentication process requires an **invite code** in the form of a [JSON Web Token](https://jwt.io/) signed by the buoy. As of now the only way to get one of these tokens is by looking at the logs of the buoy as it starts, which should look like this:
 
 ```
@@ -159,9 +159,9 @@ Note that the `join` method will both join the server *and* authenticate the cli
 
 Once you've successfully authenticated you have access to the full suite of RPC methods, all of which are listed below.
 
-### Server RPC Methods
+## Server RPC Methods
 
-#### `authenticate`
+### `authenticate`
 Authenticate to the server using an auth token. The auth token is a JWT with the following schema:
 
 ```javascript
@@ -180,7 +180,7 @@ Authenticate to the server using an auth token. The auth token is a JWT with the
 
 * `peerId`: The ID of the peer that was authenticated. This should match the `i` field of the auth token.
 
-#### `becomeDj`
+### `becomeDj`
 Attempt to become a DJ in the room. This method will fail if there are 5 or more DJs already present, or if the peer has yet to join a room.
 
 Note that, if successful, the server will immediately call `setDjs` on the client to update the DJ list. The client *should not* update its internal DJ list after receiving a successful response from this RPC call.
@@ -193,7 +193,7 @@ None
 
 * `success`: A boolean representing whether or not the operation was a success.
 
-#### `createRoom`
+### `createRoom`
 Creates a new room on the buoy.
 
 **Params:**
@@ -204,7 +204,7 @@ Creates a new room on the buoy.
 
 * `id`: The ID of the room
 
-#### `fetchRooms`
+### `fetchRooms`
 Fetches the current list of rooms on the buoy
 
 **Params:**
@@ -230,5 +230,5 @@ If the `nowPlaying` key is not null, it will be an object of the following schem
 
 When presenting this information to an end user, you should generally fall back to using the `filename` key if the `artist`, `album`, or `title` keys are `null`.
 
-#### `join`
+### `join`
 Coming soon....
