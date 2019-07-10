@@ -79,6 +79,7 @@ so. In addition, you may wish to browse through [Groovebot](https://github.com/s
     * [setSkipWarning](#setskipwarning)
     * [setVotes](#setvotes)
     * [stopTrack](#stoptrack)
+* [Object schemas](#object-schemas)
 
 ## Connecting
 Buoys expose an RPC API using [socket.io](https://socket.io/) as the
