@@ -329,6 +329,151 @@ Note that there is currently no way to revoke a vote, you can only change to the
 
 * `success`: A boolean representing that the operation was successful.
 
+## Client RPC methods
+
+### `cycleSelectedQueue`
+Causes the client to cycle the first track of their active queue to the end of the queue. This is used after a peer has completed their turn as DJ in order to prevent the same track from playing on their next turn (assuming they have more than one track in their queue).
+
+**Params:**
+
+None
+
+**Response:**
+
+None
+
+### `newChatMsg`
+Causes the client to append the associated chat message onto their chat log.
+
+**Params:**
+
+* `id`: ID of the message
+* `message`: Text of the message
+* `fromPeerId`: The peer ID of who sent the message.
+* `timestamp`: A timestamp in UNIX epoch time.
+
+**Response:**
+
+None
+
+### `playTrack`
+Causes the client to begin to play the specified chat. Before loading the track, the client should check the current value of the track on deck. If the on deck track ID matches the provided track ID of this method, it should use the preloaded track rather than reloading the URL from this method.
+
+**Params:**
+
+* `track`: A [track](#track) object
+* `votes`: An object of votes on the track. The keys will be peer IDs and the values will be vote directions (see [vote](#vote)).
+* `startedAt`: The timestamp, in UNIX epoch, that this track should begin playing and have the playhead synced up to. Note that this may be in the future, in which case the client should wait before starting playback.
+
+**Response:**
+
+None
+
+### `requestTrack`
+Requests a track from the client's queue, generally the first track.
+
+**Params:**
+
+None
+
+**Response:**
+
+* `filename`: The name of the track's source file.
+* `artist`: The name of the track artists (if present in the file's ID3 data).
+* `album`: The name of the album (if present in the file's ID3 data).
+* `title`: The name of the track (if present in the file's ID3 data).
+* `contentType`: The MIME content type associted with the file.
+* `data`: A base64 encoded string representing the binary data of the file.
+
+### `setActiveDj`
+Sets the active DJ in a room
+
+**Params:**
+
+* `djId`: The ID of the peer that is now the active DJ. This value will also be contained by the set of the room's current DJs.
+
+
+**Response:**
+
+None
+
+### `setDjs`
+Sets the set of peers that are considered DJs in the room.
+
+**Params:**
+
+* `djs`: An array of peer IDs
+
+**Response:**
+
+None
+
+### `setOnDeck`
+Provides the client with a track that should be assumed to be the next track after the current track completes playback. The client should begin to preload this track in order to reduce dead airspace due to loading times after the current track is completed.
+
+**Params:**
+
+* `track`: A [track](#track) object.
+
+**Response:**
+
+None
+
+### `setPeers`
+Sets the current peers in the room.
+
+**Params:**
+
+* `peers`: An array of [peer objects](#peer)
+
+**Response:**
+
+None
+
+### `setRooms`
+Sets the array of rooms currently available on the buoy. This is only called on the client if they are not currently associated with a room (ie they're in the room selector screen on the default Grooveboat client). It is called every time there is a new room, a room's current track is updated, or its peer count changes.
+
+**Params:**
+
+* `rooms`: An array of [room objects](#room)
+
+**Response:**
+
+None
+
+### `setSkipWarning`
+Sets the skip warning for a track to `true` or `false`. The skip warning is activated when a song has been downvoted by the room's peers and is about to be skipped. When this is set to true, clients should show a warning that the track will be skipped unless peers change their vote to up.
+
+**Params:**
+
+* `value`: A boolean representing whether or not the skip warning is active.
+
+**Response:**
+
+None
+
+### `setVotes`
+Sets the `votes` object for the currently playing track.
+
+**Params:**
+
+* `votes`: An object of votes on the track. See [playTrack](#playtrack) for schema.
+
+**Response:**
+
+None
+
+### `stopTrack`
+Stop playback of the currently playing track. This should also reset any UI the client has displaying the currently playing track to an "awaiting track" state.
+
+**Params:**
+
+None
+
+**Response:**
+
+None
+
 ## Object schemas
 
 ### Room
@@ -345,5 +490,10 @@ If the `nowPlaying` key is not null, it will be a [Track](#track) object
 * `artist`: The name of the track artists (if present in the file's ID3 data)
 * `album`: The name of the album (if present in the file's ID3 data)
 * `title`: The name of the track (if present in the file's ID3 data)
+* `url`: (optional) An HTTP(S) URL that can be used to download the file.
 
 When presenting this information to an end user, you should generally fall back to using the `filename` key if the `artist`, `album`, or `title` keys are `null`.
+
+### Peer
+* `id`: The ID of the peer.
+* `profile`: The [profile object](#setprofile) of the peer.
