@@ -109,7 +109,7 @@ class Peer {
 
     clearTimeout(this.authTimeout);
 
-    return {success: true, peerId: this.id};
+    return {peerId: this.id};
   }
 
   fetchRooms = () => {
