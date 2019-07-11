@@ -22,10 +22,12 @@ class Peer {
       authenticate: this.authenticate,
       becomeDj: this.becomeDj,
       createRoom: this.createRoom,
+      fetchAdminToken: this.fetchAdminToken,
       fetchRooms: this.fetchRooms,
       join: this.join,
       joinRoom: this.joinRoom,
       leaveRoom: this.leaveRoom,
+      restoreRoom: this.restoreRoom,
       sendChat: this.sendChat,
       setProfile: this.setProfile,
       skipTurn: this.skipTurn,
@@ -86,11 +88,7 @@ class Peer {
 
     // Generate an auth token
     const token = JWT.sign({
-      // URL
-      u: this.server.ws_url,
-      // Server name
-      n: this.server.name,
-      // ID
+      sid: this.server.id,
       i: this.id,
     }, process.env.JWT_SECRET);
 
@@ -100,8 +98,14 @@ class Peer {
   }
 
   authenticate = async ({jwt}) => {
-    const token = JWT.verify(jwt, process.env.JWT_SECRET);
-    if (token.u !== this.server.wsUrl || token.n !== this.server.name) {
+    let token;
+    try {
+      token = JWT.verify(jwt, process.env.JWT_SECRET);
+    } catch (e) {
+      return {error: true, message: 'invalid token'};
+    }
+
+    if (token.sid !== this.server.id) {
       return {error: true, message: 'invalid token'};
     }
 
@@ -109,11 +113,17 @@ class Peer {
 
     clearTimeout(this.authTimeout);
 
-    return {peerId: this.id};
+    return {success: true, peerId: this.id};
   }
 
   fetchRooms = () => {
     return this.server.rooms.map(r => r.serialize());
+  }
+
+  fetchAdminToken = () => {
+    if (this.currentRoom && this.currentRoom.admin === this) {
+      return this.currentRoom.generateAdminToken();
+    }
   }
 
   joinRoom = ({id}) => {
@@ -138,11 +148,40 @@ class Peer {
   }
 
   createRoom = ({name}) => {
-    if (name.length === 0) {
-      return {error: true, message: 'name must be at least 1 character'};
+    if (name.trim().length === 0) {
+      return {error: true, message: 'name must be at least 1 non-whitespace character'};
     }
 
-    return this.server.createRoom({name}).serialize();
+    const room = this.server.createRoom({name, adminId: this.id});
+
+    return {
+      room: room.serialize(),
+      adminToken: room.generateAdminToken(),
+    };
+  }
+
+  restoreRoom = ({adminToken}) => {
+    let payload;
+    try {
+      payload = JWT.verify(adminToken, process.env.JWT_SECRET);
+    } catch (e) {
+      return {error: true, message: 'invalid admin token'};
+    }
+
+    const {buoyId, roomId, name, adminId} = payload;
+    if (buoyId !== this.server.id) {
+      return {error: true, message: 'invalid server id'};
+    }
+
+    if (adminId !== this.id) {
+      return {error: true, message: 'bad admin id'};
+    }
+
+    if (name.trim().length === 0) {
+      return {error: true, message: 'room name must be at least 1 non-whitespace character'};
+    }
+
+    return this.server.createRoom({id: roomId, name, adminId});
   }
 
   becomeDj = () => {

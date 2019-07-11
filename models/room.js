@@ -1,26 +1,56 @@
 const uuid = require('uuid/v1');
+const jwt = require('jsonwebtoken');
 
 const MAX_DJS = 5;
 
 class Room {
-  constructor({name, server}) {
-    this.id = uuid();
+  constructor({
+    id = uuid(),
+    name,
+    adminId,
+    server,
+  }) {
+    this.id = id;
     this.name = name;
     this.server = server;
-    this.peers = [];
-    this.djs = [];
+    this.adminId = adminId;
+
     this.activeDj = null;
-    this.owner = null;
+    this.admin = null;
     this.nowPlaying = null;
     this.onDeck = null;
     this.skipWarning = false;
+    this.peers = [];
+    this.djs = [];
 
     this._removalTimeout = null;
   }
 
+  static createFromToken({token, server}) {
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return false;
+    }
+
+    return new Room({...payload, server});
+  }
+
+  generateAdminToken = () => {
+    const payload = {
+      buoyId: this.server.id,
+      roomId: this.id,
+      name: this.name,
+      adminId: this.adminId,
+    };
+
+    return jwt.sign(payload, process.env.JWT_SECRET);
+  }
+
   addPeer = ({peer}) => {
-    if (this.peers.length === 0) {
-      this.owner = peer;
+    if (peer.id === this.adminId) {
+      this.admin = peer;
     }
 
     this.peers.push(peer);
@@ -64,14 +94,12 @@ class Room {
 
     // If we don't have any peers left let's clean ourselves up after 45s
     if (this.peers.length === 0) {
-      this._removalTimeout = setTimeout(() => {
-        this.server.removeRoom({room: this})
-      }, 45000);
+      this.triggerRemoval();
     }
 
-    // Reassign owner if they're leaving
-    if (peer === this.owner) {
-      this.owner = this.peers[0];
+    // Clear admin if they're leaving
+    if (peer === this.admin) {
+      this.admin = null;
     }
 
     this.broadcast({
@@ -313,6 +341,13 @@ class Room {
       if (excludeIds.includes(peer.id)) return;
       peer.send({name, params})
     });
+  }
+
+  triggerRemoval = () => {
+    this._removalTimeout = setTimeout(() => {
+      if (this.peers.length > 0) return;
+      this.server.removeRoom({room: this})
+    }, 45000);
   }
 
   serialize = ({includePeers = false} = {}) => ({

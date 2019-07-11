@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const uuid = require('uuid/v1');
+
 const Peer = require('./peer');
 const Room = require('./room');
 
@@ -8,6 +10,14 @@ class PeerServer {
     this.peers = [];
     this.rooms = [];
     this.tracks = {};
+
+    if (process.env.BUOY_ID) {
+      this.id = process.env.BUOY_ID;
+    } else {
+      this.id = uuid();
+      console.log(`Buoy ID is set to ${this.id}`);
+      console.log('Please set the BUOY_ID environment variable, otherwise invite tokens will be reset between server sessions');
+    }
 
     this.url = `${process.env.SSL_ENABLED === '1' ? 'https://' : 'http://'}${process.env.BUOY_HOST}/`;
     this.wsUrl = `${process.env.SSL_ENABLED === '1' ? 'wss://' : 'ws://'}${process.env.BUOY_HOST}/`;
@@ -29,6 +39,8 @@ class PeerServer {
       u: this.wsUrl,
       // Server name
       n: this.name,
+      // Server ID
+      i: this.id,
     };
 
     return jwt.sign(payload, process.env.JWT_SECRET);
@@ -47,13 +59,22 @@ class PeerServer {
   ////
   // Peer-invoked methods
   //
-  createRoom = ({name}) => {
-    const room = new Room({name, server: this});
+  createRoom = ({id, name, adminId}) => {
+    // If they're trying to restore a room, make sure it doesn't already exist
+    if (id) {
+      const roomExists = this.rooms.reduce((r, exists) => r.id === id || exists, false)
+      if (roomExists) {
+        return {error: true, message: 'room with this id already exists'};
+      }
+    }
+
+    const room = new Room({id, name, adminId, server: this});
     this.rooms.push(room);
     this.broadcastRooms();
 
     return room;
   }
+
 
   // Broadcast to all peers without a room
   broadcastRooms = () => {

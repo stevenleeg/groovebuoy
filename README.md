@@ -198,8 +198,7 @@ Authenticate to the server using an auth token. The auth token is a JWT with the
 
 ```javascript
 {
-    "u": "ws://localhost:8000", // The URL of the buoy
-    "n": "some buoy",           // The name of the buoy
+    "sid": "buoy_id",           // The ID of the buoy
     "i": "[uuid]"               // The UUID of the authenticated peer
 }
 ```
@@ -210,7 +209,7 @@ Authenticate to the server using an auth token. The auth token is a JWT with the
 
 **Response:**
 
-* `peerId`: The ID of the peer that was authenticated. This should match the `i` field of the auth token.
+* `success`: A boolean representing whether or not the operation was a success.
 
 ### `becomeDj`
 Attempt to become a DJ in the room. This method will fail if there are 5 or more DJs already present, or if the peer has yet to join a room.
@@ -234,7 +233,8 @@ Creates a new room on the buoy.
 
 **Response:**
 
-* `id`: The ID of the room
+* `room`: A serialized [room](#room) object.
+* `adminToken`: A token that can be used to recreate a room with the same ID and admin peer ID in the future (if the room somehow gets deleted).
 
 ### `fetchRooms`
 Fetches the current list of rooms on the buoy
