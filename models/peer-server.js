@@ -64,7 +64,7 @@ class PeerServer {
     if (id) {
       const roomExists = this.rooms.reduce((r, exists) => r.id === id || exists, false)
       if (roomExists) {
-        return {error: true, message: 'room with this id already exists'};
+        throw new Error('room with this id already exists');
       }
     }
 

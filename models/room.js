@@ -26,17 +26,6 @@ class Room {
     this._removalTimeout = null;
   }
 
-  static createFromToken({token, server}) {
-    let payload;
-    try {
-      payload = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (e) {
-      return false;
-    }
-
-    return new Room({...payload, server});
-  }
-
   generateAdminToken = () => {
     const payload = {
       buoyId: this.server.id,

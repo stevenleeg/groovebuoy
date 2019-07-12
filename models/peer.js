@@ -48,7 +48,11 @@ class Peer {
       console.log(`[RCV ${id}]: ${name}`);
       Promise.resolve(method(params))
         .then(v => respond(v))
-        .catch(e => respond({error: true, message: e.toString()}));
+        .catch(e => {
+          console.log(`[RCV ${id}] Error while calling ${name}:`);
+          console.log(e);
+          respond({error: true, message: e.toString()});
+        });
     } else {
       console.log(`[RCV] Invalid call: ${name}`);
       respond({error: true, message: 'Invalid method name'});
@@ -152,12 +156,16 @@ class Peer {
       return {error: true, message: 'name must be at least 1 non-whitespace character'};
     }
 
-    const room = this.server.createRoom({name, adminId: this.id});
+    try {
+      const room = this.server.createRoom({name, adminId: this.id});
 
-    return {
-      room: room.serialize(),
-      adminToken: room.generateAdminToken(),
-    };
+      return {
+        room: room.serialize(),
+        adminToken: room.generateAdminToken(),
+      };
+    } catch (e) {
+      return {error: true, message: e.toString()};
+    }
   }
 
   restoreRoom = ({adminToken}) => {
@@ -181,7 +189,11 @@ class Peer {
       return {error: true, message: 'room name must be at least 1 non-whitespace character'};
     }
 
-    return this.server.createRoom({id: roomId, name, adminId});
+    try {
+      return this.server.createRoom({id: roomId, name, adminId}).serialize({includePeers: true});
+    } catch (e) {
+      return {error: true, message: e.toString()};
+    }
   }
 
   becomeDj = () => {
