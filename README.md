@@ -19,17 +19,10 @@ Clone the repo:
 $ git clone https://github.com/stevenleeg/groovebuoy.git
 ```
 
-Install dependencies:
+Run setup:
 
 ```
-$ yarn install
-```
-
-Set up needed environment variables:
-
-```
-cp .env.example .env
-"${EDITOR:-vi}" .env # You may want to change the defaults, otherwise skip this
+$ ./setup.sh
 ```
 
 Spin up a local webserver:
